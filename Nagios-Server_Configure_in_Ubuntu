@@ -1,0 +1,94 @@
+										Install and Configure Nagios in Ubuntu
+
+# Install Required Packages
+sudo apt update -y
+sudo apt upgrade -y
+sudo apt install -y autoconf bc gawk dc build-essential gcc libc6 make wget unzip apache2 php libapache2-mod-php libgd-dev libmcrypt-dev make libssl-dev snmp libnet-snmp-perl gettext
+
+# Make Directory 
+  mkdir nagios
+  cd nagios
+# Download and Extract Nagios
+	
+	sudo wget https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.4.6.tar.gz
+    
+	sudo tar -xvf nagios-4.4.6.tar.gz
+	cd nagios-4.4.6
+	
+	sudo ./configure --with-httpd-conf=/etc/apache2/sites-enabled
+	
+	sudo make all
+	
+# Compile and Install Nagios 
+
+	sudo make install-groups-users
+	
+	sudo usermod -a -G nagios www-data
+	
+# Compileand Install Nagios
+
+	sudo make install 
+	
+	sudo make install-init
+	
+	sudo make install-commandmode
+	
+	sudo make install-config
+	
+	sudo make install-webconf
+	
+	sudo a2enmod rewrite cgi
+	
+# Create a new apache basic authentication for the user 	
+	
+	sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin    
+	enter a New passwd:
+
+# Install and Configure Nagios Plugins and NRPE Plugins	
+	
+	cd .. 
+
+	sudo apt install monitoring-plugins nagios-nrpe-plugin -y
+    
+	cd /usr/local/nagios/etc/
+	
+	sudo vim nagios.cfg
+    :set nu (To Apply Line numbers)
+	remove # from line 51- 54 to define directory for storing all server hosts configuration
+    :wq (save and exit)	
+	
+	sudo mkdir servers  printers switches routers
+# Edit resource.cfg conf  file to define the path binary files of Nagios Monitoring Plugins	
+	sudo vim resource.cfg  
+	:set nu  
+	(Goto 25 line, uncomment it, and add new content in 26 line)
+	$USER1$=/usr/lib/nagios/plugins     
+	:wq (save add exit)
+	
+	cd /objects	
+# Edit contents.cfg config file to define the nagios admin Email contents.
+  	sudo vim contents.cfg
+    Goto a email line and remove the default mail and add your mail address 
+	:wq 
+	
+# Edit commands.cfg config file to define the Nrpe check command
+    sudo vim commands.cfg 
+	Goto last line and define this command 
+define command{
+        command_name check_nrpe
+        command_line $USER1$/check_nrpe -H $HOSTADDRESS$ -c $ARG1$
+}
+    :wq 
+	
+	cd ~ 
+# Configure the Firewall
+#    sudo ufw status (If it active ok, If it is inactive then Enable it)
+#	sudo ufw allow apache  
+#	sudo ufw reload
+	
+# Restart and Enable the Apache2 and Nagios services 
+    sudo systemctl restart apache2 nagios
+	sudo systemctl enable apache2 
+	sudo systemctl enable nagios
+	
+# Access Nagios via web interface [Your IP Address/nagios]

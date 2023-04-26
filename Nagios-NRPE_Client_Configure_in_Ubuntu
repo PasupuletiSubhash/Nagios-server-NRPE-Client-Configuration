@@ -1,0 +1,79 @@
+                                         
+										 INSTALL NAGIOS CLIENT ON UBUNTU
+
+
+#Install Nagios Client and required plugins 
+
+sudo apt update -ynagios
+sudo apt install nagios-nrpe-server-plugins -y
+
+#Configure Nagios Client
+
+sudo nano /etc/nagios/nrpe.cfg 
+allowed_hosts=127.0.0.1, <Nagios-server-IP>
+
+#restart NRPE service
+
+sudo systemctl restart nagios-nrpe-server 
+
+#Install Apache2 plugins  for NRPE CLIENT
+
+cd /usr/lib/nagios/plugins/
+
+sudo vim check_apache2
+enter the details and save it 
+
+#Give Execute permissions 
+sudo chmod +x check_apache2
+ 
+
+#Update Command Definitions for NRPE CLIENT
+
+sudo nano /etc/nagios/nrpe.cfg 
+
+command[check_users]=/usr/lib/nagios/plugins/check_users -w 5 -c 10
+command[check_load]=/usr/lib/nagios/plugins/check_load -w 15,10,5 -c 30,25,20
+command[check_xvda1]=/usr/lib/nagios/plugins/check_disk -w 20% -c 10% -p /dev/xvda1
+command[check_zombie_procs]=/usr/lib/nagios/plugins/check_procs -w 5 -c 10 -s Z
+command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 150 -c 200
+
+NOTE: check the commands are uncomment are not if it is not update it
+
+#restart NRPE service
+sudo systemctl restart nagios-nrpe-server 
+
+# Open Nagios Server and Enter the CLIENT Server Details 
+
+cd /usr/local/nagios/etc/servers
+
+sudo vim clienthost.cfg
+ enter the Client server details and save it 
+
+#Install Apache2 plugins  for NAGIOS Server
+
+cd /usr/lib/nagios/plugins/
+sudo vim check_apache2
+enter the details and save it 
+
+#Give Execute permissions 
+sudo chmod +x check_apache2
+
+# Define the Commands.cfg file and enter the details of remote server
+
+
+
+define command {
+
+    command_name    check_log
+    command_line    $USER1$/check_log -q  $HOSTADDRESS$ $ARG1$
+}
+define command {
+
+    command_name    check_apt
+    command_line    $USER1$/check_apt $ARG1$ $HOSTADDRESS$
+}
+define command {
+
+    command_name    check_apache2
+    command_line    $USER1$/check_apache2 -H $HOSTADDRESS$ $ARG1$
+}
